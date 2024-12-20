@@ -8,7 +8,11 @@ import { NotFoundError } from "../errors/not-found.js";
 const checkUserExist = async (email: string) =>
   await prisma.user.findFirst({ where: { email } });
 
-const register: RequestHandler = async (req, res, next): Promise<void> => {
+const register: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const { username, email, password } = req.body;
 

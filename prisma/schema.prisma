@@ -7,19 +7,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// user model has the following fields
-// id pk uuid
-// username string
-// email string
-// password string
-// created_at
-// updated_at
-
 model User {
-  id         String   @id @default(uuid())
+  id         String     @id @default(uuid())
   username   String
   email      String
   password   String
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt()
+  note       Note[]
+  category   Category[]
+  tag        Tag[]
+
+  @@map("user")
+}
+
+model Note {
+  id          String    @id @default(uuid())
+  title       String
+  content     String
+  user_id     String
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt()
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  category_id String?
+  category    Category? @relation(fields: [category_id], references: [id])
+  tags        NoteTag[]
+
+  @@map("note")
+}
+
+model Category {
+  id         String   @id @default(uuid())
+  name       String
+  user_id    String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt()
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  note       Note[]
+
+  @@unique([name, user_id])
+  @@map("category")
+}
+
+model Tag {
+  id         String    @id @default(uuid())
+  name       String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt()
+  user_id    String
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  note_tag   NoteTag[]
+
+  @@unique([name, user_id])
+}
+
+model NoteTag {
+  note_id String
+  tag_id  String
+  note    Note   @relation(fields: [note_id], references: [id])
+  tag     Tag    @relation(fields: [tag_id], references: [id])
+
+  @@id([note_id, tag_id])
+  @@map("note_tag")
 }
