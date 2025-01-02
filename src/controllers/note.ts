@@ -199,4 +199,62 @@ const deleteNote: RequestHandler = async (
     next(error);
   }
 };
-export { createNote, deleteNote, updateNote };
+
+const getNotes: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req?.params?.id;
+    const page = Number(req?.query?.page || 1);
+    const per_page = Number(req?.query?.per_page || 50);
+    const skip = (page - 1) * per_page || 0;
+
+    if (userId && userId !== req?.user?.id)
+      return next(new UnauthorizedError("User unautorized"));
+
+    const notes = await prisma.note.findMany({
+      where: { user_id: userId },
+      take: per_page,
+      skip,
+    });
+
+    const jsonBody = {
+      error: false,
+      data: notes,
+    };
+
+    res.status(200).json(jsonBody);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getNote: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const noteId = req?.params?.id;
+    const userId = req?.user?.id;
+
+    if (!userId) return next(new UnauthorizedError("User is unauthorized"));
+    if (!noteId) return next(new BadRequestError("Note id is required"));
+
+    const note = await prisma.note.findFirst({
+      where: { id: noteId, AND: { user_id: userId } },
+    });
+
+    const jsonBody = {
+      error: false,
+      data: note,
+    };
+
+    res.status(200).json(jsonBody);
+  } catch (error) {
+    next(error);
+  }
+};
+export { createNote, deleteNote, updateNote, getNotes, getNote };
